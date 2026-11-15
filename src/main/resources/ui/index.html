@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Wizard of Oz proxy</title>
+<link rel="icon" href="data:,">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  body { font: 14px/1.5 -apple-system, "Segoe UI", system-ui, sans-serif; color: #1f2328; margin: 0; background: #f7f8fa; }
+  header { background: #1f2328; color: #fff; padding: 12px 24px; display: flex; align-items: center; gap: 16px; }
+  header h1 { font-size: 16px; margin: 0; flex: 1; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+  section { background: #fff; border: 1px solid #e5e7eb; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+  h2 { font-size: 15px; margin: 0 0 12px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+  .stat { background: #f7f8fa; border: 1px solid #e5e7eb; border-radius: 6px; padding: 8px 12px; }
+  .stat b { display: block; font-size: 20px; }
+  .stat span { color: #57606a; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  th { color: #57606a; font-weight: 600; font-size: 12px; }
+  td code { font-size: 12px; word-break: break-all; }
+  form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 16px; }
+  .form-section-title { grid-column: 1 / -1; font-size: 13px; font-weight: 600; color: #1f2328; margin-top: 8px; padding-bottom: 4px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+  label { display: flex; flex-direction: column; font-size: 12px; color: #57606a; gap: 2px; }
+  input, select, textarea { font: inherit; padding: 5px 8px; border: 1px solid #d0d7de; border-radius: 4px; color: #1f2328; }
+  button { font: inherit; padding: 5px 12px; border: 1px solid #d0d7de; border-radius: 4px; background: #fff; cursor: pointer; }
+  button.primary { background: #3b82d4; border-color: #3b82d4; color: #fff; }
+  button.danger { color: #cf222e; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .db-warning-banner { background: #fff8c5; color: #734f00; border: 1px solid #d4a72c; border-radius: 6px; padding: 10px 14px; margin-bottom: 16px; font-size: 13px; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+  .db-warning-banner[hidden] { display: none !important; }
+  .presets { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; background: #f7f8fa; padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 12px; color: #57606a; }
+  .presets button { padding: 3px 8px; font-size: 11px; background: #fff; }
+  td.buttons { white-space: nowrap; }
+  td.buttons button { margin-right: 4px; }
+  .full { grid-column: 1 / -1; }
+  .badge { display: inline-block; font-size: 11px; padding: 1px 5px; border-radius: 4px; border: 1px solid #d0d7de; background: #f6f8fa; color: #24292f; margin-right: 4px; }
+  .badge.mode { font-weight: 600; background: #eef2f7; border-color: #c2d1e0; color: #1f5fa3; }
+  #error { color: #cf222e; margin-top: 8px; min-height: 1.4em; }
+  .off { color: #8c959f; }
+  .hint { color: #57606a; font-size: 12px; }
+  nav { display: flex; gap: 4px; max-width: 1100px; margin: 16px auto 0; padding: 0 24px; border-bottom: 1px solid #e5e7eb; }
+  nav button { border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: #57606a; }
+  nav button.active { border-bottom-color: #3b82d4; color: #1f2328; font-weight: 600; }
+  .tab[hidden] { display: none; }
+  .toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+  .toolbar .grow { flex: 1; }
+  table.log { table-layout: fixed; }
+  table.log th:nth-child(1) { width: 52px; }
+  table.log th:nth-child(2) { width: 92px; }
+  table.log th:nth-child(3) { width: 170px; }
+  table.log th:nth-child(4) { width: 120px; }
+  table.log th:nth-child(5) { width: 70px; }
+  table.log th:nth-child(7) { width: 100px; }
+  table.log th:nth-child(8) { width: 66px; }
+  table.log th:nth-child(9) { width: 96px; }
+  td.clip { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  tr.row.open td { background: #f7f8fa; }
+  tr.row { cursor: pointer; }
+  tr.row:hover { background: #f7f8fa; }
+  tr.detail td { background: #f7f8fa; }
+  .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .pair h3 { font-size: 12px; color: #57606a; margin: 0 0 4px; }
+  pre { margin: 0; padding: 8px; background: #fff; border: 1px solid #e5e7eb; border-radius: 4px; max-height: 260px; overflow: auto; white-space: pre-wrap; word-break: break-all; font-size: 12px; }
+  .tag { display: inline-block; padding: 0 6px; border-radius: 10px; font-size: 12px; border: 1px solid #d0d7de; }
+  .tag.mocked { background: #f0eafc; border-color: #7c5cd8; color: #5b3fb5; }
+  .tag.real { background: #eaf3fc; border-color: #3b82d4; color: #1f5fa3; }
+  .status-bad { color: #cf222e; font-weight: 600; }
+  svg text { font: 11px -apple-system, "Segoe UI", system-ui, sans-serif; fill: #57606a; }
+  .legend { display: flex; gap: 16px; margin-bottom: 8px; color: #57606a; font-size: 12px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Wizard of Oz proxy</h1>
+  <span id="paused"></span>
+  <button id="pause">Pause all rules</button>
+</header>
+<nav>
+  <button id="tab-overview-btn" class="active" data-tab="overview">Rules and statistics</button>
+  <button id="tab-requests-btn" data-tab="requests">Requests</button>
+  <button id="tab-graph-btn" data-tab="graph">Call graph</button>
+</nav>
+<main>
+  <div class="tab" id="tab-overview">
+  <div id="db-warning" class="db-warning-banner" hidden></div>
+  <section>
+    <h2>Statistics</h2>
+    <div class="stats" id="stats"></div>
+  </section>
+
+  <section>
+    <h2>Rules <span class="hint">- the first enabled rule that matches a request applies</span></h2>
+    <table>
+      <thead><tr><th>On</th><th>Method</th><th>Path contains</th><th>Header</th><th>Query param</th><th>Delay</th><th>Fails with</th><th>Pattern</th><th></th></tr></thead>
+      <tbody id="rules"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2 id="form-title">Add a rule</h2>
+    <form id="form">
+      <div class="full presets">
+        <b>Quick presets:</b>
+        <button type="button" id="preset-500">⚡ 500 Internal Error</button>
+        <button type="button" id="preset-503">⚡ Flaky 503 Pattern</button>
+        <button type="button" id="preset-delay">⏱️ 500ms Delay</button>
+        <button type="button" id="preset-429">⚡ 429 Rate Limit</button>
+      </div>
+
+      <div class="form-section-title">1. When to match</div>
+      <label>HTTP Method (blank = any)
+        <select name="method">
+          <option value="">Any method</option>
+          <option value="GET">GET</option>
+          <option value="POST">POST</option>
+          <option value="PUT">PUT</option>
+          <option value="DELETE">DELETE</option>
+          <option value="PATCH">PATCH</option>
+          <option value="HEAD">HEAD</option>
+          <option value="OPTIONS">OPTIONS</option>
+        </select>
+      </label>
+      <label>Path contains (blank = every path)<input name="pathContains" placeholder="/_search or /orders"></label>
+      <label>Header match mode
+        <select name="headerMatchMode">
+          <option value="ALL">Match ALL headers (AND)</option>
+          <option value="ANY">Match ANY header (OR)</option>
+        </select>
+      </label>
+      <label>Headers (key=value, one per line)<textarea name="headersText" rows="2" placeholder="X-Tenant=tenant-a&#10;X-Role=admin"></textarea></label>
+      <label>Query param match mode
+        <select name="queryParamMatchMode">
+          <option value="ALL">Match ALL query params (AND)</option>
+          <option value="ANY">Match ANY query param (OR)</option>
+        </select>
+      </label>
+      <label>Query params (key=value, one per line)<textarea name="queryParamsText" rows="2" placeholder="env=test&#10;debug=1"></textarea></label>
+
+      <div class="form-section-title">2. Injected fault or mock response</div>
+      <label>Delay in ms<input name="delayMs" type="number" min="0" placeholder="0"></label>
+      <label>Respond with status<input name="responseStatus" type="number" min="100" max="599" placeholder="forward instead"></label>
+      <label>Failure %<input name="errorProbability" type="number" min="0" max="100" placeholder="100" title="Percent (0-100) of matching requests to fail with the status"></label>
+      <label>Error pattern<input name="errorPattern" placeholder="S##2,F#503#3,S##1"></label>
+      <label>Response body<input name="responseBody" placeholder="{}"></label>
+      <label>Content type<input name="contentType" placeholder="application/json"></label>
+      <label>Rule enabled<select name="enabled"><option value="true">Yes</option><option value="false">No</option></select></label>
+
+      <div class="full actions">
+        <button class="primary" type="submit" id="save">Add rule</button>
+        <button type="button" id="cancel" hidden>Cancel edit</button>
+      </div>
+      <div class="full hint">
+        An error pattern is a list of runs: <code>S##count</code> forwards, <code>F#status#count</code> answers with that status.
+        <code>S##2,F#503#3,S##1</code> forwards 2 requests, fails 3 with 503, then forwards; the last run repeats forever.
+      </div>
+    </form>
+    <div id="error"></div>
+  </section>
+  </div>
+
+  <div class="tab" id="tab-requests" hidden>
+    <section>
+      <div class="toolbar">
+        <h2 style="margin:0">Last requests</h2>
+        <span class="hint grow" id="requests-note"></span>
+        <button id="clear-requests" class="danger">Clear</button>
+      </div>
+      <p class="hint">The last 100 requests that went through the proxy. The management page and API are not listed. Click a row to see both payloads.</p>
+      <table class="log">
+        <thead><tr><th>#</th><th>Time</th><th>Origin</th><th>Client</th><th>Type</th><th>Path</th><th>Answered by</th><th>Status</th><th>Time taken</th></tr></thead>
+        <tbody id="requests"></tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="tab" id="tab-graph" hidden>
+    <section>
+      <h2>Calls over the last 5 minutes</h2>
+      <div class="legend"><span><i style="background:#3b82d4"></i>Forwarded to the backend</span><span><i style="background:#7c5cd8"></i>Mocked by a rule</span></div>
+      <div id="graph"></div>
+    </section>
+    <section>
+      <h2>Status codes of the last 100 requests</h2>
+      <div id="status-graph"></div>
+    </section>
+  </div>
+</main>
+<script>
+const base = location.pathname.replace(/\/ui\/?$/, '');
+const $ = id => document.getElementById(id);
+let editingId = null;
+let rulesById = {};
+let paused = false;
+
+async function call(method, path, body) {
+  const response = await fetch(base + path, {
+    method,
+    headers: body ? { 'Content-Type': 'application/json' } : {},
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  const text = await response.text();
+  const data = text ? JSON.parse(text) : null;
+  if (!response.ok) throw new Error(data && data.message ? data.message : response.statusText);
+  return data;
+}
+
+function showError(e) { $('error').textContent = e ? e.message : ''; }
+
+function cell(text, cls) {
+  const td = document.createElement('td');
+  td.textContent = text;
+  if (cls) td.className = cls;
+  return td;
+}
+
+/** A cell that shows one line cut with an ellipsis, and all of its text, wrapped, once its row is open. */
+function clipCell(text) {
+  const td = cell(text, 'clip');
+  td.title = text;
+  return td;
+}
+
+function button(label, onClick, cls) {
+  const b = document.createElement('button');
+  b.textContent = label;
+  if (cls) b.className = cls;
+  b.onclick = async () => { try { showError(); await onClick(); await refresh(); } catch (e) { showError(e); } };
+  return b;
+}
+
+async function refresh() {
+  const [rules, stats] = await Promise.all([call('GET', '/rules'), call('GET', '/statistics')]);
+  paused = stats.paused;
+  $('paused').textContent = paused ? 'Rules are paused: every request is forwarded' : '';
+  $('pause').textContent = paused ? 'Resume rules' : 'Pause all rules';
+
+  if (stats.dbWarning && stats.dbWarning.trim()) {
+    $('db-warning').textContent = '⚠️ ' + stats.dbWarning;
+    $('db-warning').hidden = false;
+    $('db-warning').style.display = 'flex';
+  } else {
+    $('db-warning').textContent = '';
+    $('db-warning').hidden = true;
+    $('db-warning').style.display = 'none';
+  }
+
+  const labels = [
+    ['totalRequests', 'Total requests'], ['totalForwardedRequests', 'Forwarded'], ['totalMockedRequests', 'Mocked'],
+    ['totalDelayedRequests', 'Delayed'], ['totalRules', 'Rules'], ['activeRules', 'Active rules'],
+    ['inactiveRules', 'Inactive rules'], ['activeDelays', 'Active delays'],
+  ];
+  $('stats').replaceChildren(...labels.map(([key, label]) => {
+    const div = document.createElement('div');
+    div.className = 'stat';
+    const value = document.createElement('b');
+    value.textContent = stats[key];
+    const name = document.createElement('span');
+    name.textContent = label;
+    div.append(value, name);
+    return div;
+  }));
+
+  rulesById = {};
+  $('rules').replaceChildren(...rules.map(rule => {
+    rulesById[rule.id] = rule;
+    const tr = document.createElement('tr');
+    if (!rule.enabled) tr.className = 'off';
+    const fails = rule.responseStatus == null ? '' : rule.responseStatus + ' (' + rule.errorProbability + '%)';
+    const actions = document.createElement('td');
+    actions.className = 'buttons';
+    actions.append(
+      button(rule.enabled ? 'Disable' : 'Enable', () => call('POST', '/rules/' + rule.id + (rule.enabled ? '/disable' : '/enable'))),
+      button('Edit', async () => startEdit(rule.id)),
+      button('Delete', () => call('DELETE', '/rules/' + rule.id), 'danger'));
+    let headerText = '';
+    if (rule.headers && Object.keys(rule.headers).length) {
+      headerText = '[' + (rule.headerMatchMode || 'ALL') + '] ' + Object.entries(rule.headers).map(([k, v]) => k + '=' + v).join(', ');
+    }
+    let queryParamText = '';
+    if (rule.queryParams && Object.keys(rule.queryParams).length) {
+      queryParamText = '[' + (rule.queryParamMatchMode || 'ALL') + '] ' + Object.entries(rule.queryParams).map(([k, v]) => k + '=' + v).join(', ');
+    }
+    tr.append(cell(rule.enabled ? 'Yes' : 'No'), cell(rule.method || 'any'), cell(rule.pathContains || 'every path'),
+      cell(headerText), cell(queryParamText),
+      cell(rule.delayMs ? rule.delayMs + ' ms' : ''), cell(fails), cell(rule.errorPattern), actions);
+    return tr;
+  }));
+}
+
+function parseKeyValues(text) {
+  if (!text) return {};
+  const result = {};
+  for (const line of text.split(/[\n,]/)) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    const eqIdx = trimmed.indexOf('=');
+    const colonIdx = trimmed.indexOf(':');
+    let idx = eqIdx;
+    if (idx === -1 || (colonIdx !== -1 && colonIdx < idx)) idx = colonIdx;
+    if (idx !== -1) {
+      const k = trimmed.slice(0, idx).trim();
+      const v = trimmed.slice(idx + 1).trim();
+      if (k) result[k] = v;
+    } else {
+      result[trimmed] = '';
+    }
+  }
+  return result;
+}
+
+function startEdit(id) {
+  const rule = rulesById[id];
+  editingId = id;
+  const form = $('form');
+  for (const field of ['method', 'pathContains', 'headerMatchMode', 'queryParamMatchMode', 'delayMs', 'responseStatus', 'errorProbability', 'errorPattern', 'responseBody', 'contentType']) {
+    form.elements[field].value = rule[field] == null ? (field.endsWith('MatchMode') ? 'ALL' : '') : rule[field];
+  }
+  form.elements.headersText.value = rule.headers ? Object.entries(rule.headers).map(([k, v]) => k + '=' + v).join('\n') : '';
+  form.elements.queryParamsText.value = rule.queryParams ? Object.entries(rule.queryParams).map(([k, v]) => k + '=' + v).join('\n') : '';
+  form.elements.enabled.value = String(rule.enabled);
+  $('form-title').textContent = 'Edit rule';
+  $('save').textContent = 'Save rule';
+  $('cancel').hidden = false;
+}
+
+function stopEdit() {
+  editingId = null;
+  $('form').reset();
+  $('form-title').textContent = 'Add a rule';
+  $('save').textContent = 'Add rule';
+  $('cancel').hidden = true;
+}
+
+$('cancel').onclick = stopEdit;
+$('pause').onclick = async () => { try { await call('POST', paused ? '/resume' : '/pause'); await refresh(); } catch (e) { showError(e); } };
+
+$('preset-500').onclick = () => {
+  const form = $('form');
+  form.elements.responseStatus.value = '500';
+  form.elements.responseBody.value = '{"error":"Internal Server Error"}';
+  form.elements.errorPattern.value = '';
+};
+
+$('preset-503').onclick = () => {
+  const form = $('form');
+  form.elements.errorPattern.value = 'S##2,F#503#3,S##1';
+  form.elements.responseStatus.value = '';
+  form.elements.responseBody.value = '{"error":"Service Temporarily Unavailable"}';
+};
+
+$('preset-delay').onclick = () => {
+  const form = $('form');
+  form.elements.delayMs.value = '500';
+};
+
+$('preset-429').onclick = () => {
+  const form = $('form');
+  form.elements.responseStatus.value = '429';
+  form.elements.responseBody.value = '{"error":"Too many requests"}';
+  form.elements.errorPattern.value = '';
+};
+
+$('form').onsubmit = async event => {
+  event.preventDefault();
+  const form = event.target;
+  const number = name => form.elements[name].value === '' ? null : Number(form.elements[name].value);
+  const text = name => form.elements[name].value === '' ? null : form.elements[name].value;
+  const rule = {
+    enabled: form.elements.enabled.value === 'true',
+    method: text('method'), pathContains: text('pathContains'),
+    headers: parseKeyValues(text('headersText')),
+    headerMatchMode: text('headerMatchMode') || 'ALL',
+    queryParams: parseKeyValues(text('queryParamsText')),
+    queryParamMatchMode: text('queryParamMatchMode') || 'ALL',
+    delayMs: number('delayMs'),
+    responseStatus: number('responseStatus'), errorProbability: number('errorProbability'),
+    errorPattern: text('errorPattern'), responseBody: text('responseBody'), contentType: text('contentType'),
+  };
+  try {
+    showError();
+    await (editingId ? call('PUT', '/rules/' + editingId, rule) : call('POST', '/rules', rule));
+    stopEdit();
+    await refresh();
+  } catch (e) {
+    showError(e);
+  }
+};
+
+
+function el(tag, props, ...children) {
+  const node = document.createElement(tag);
+  Object.assign(node, props || {});
+  node.append(...children);
+  return node;
+}
+
+let activeTab = 'overview';
+const expanded = new Set();
+
+document.querySelectorAll('nav button').forEach(b => {
+  b.onclick = () => {
+    activeTab = b.dataset.tab;
+    document.querySelectorAll('nav button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.tab').forEach(t => { t.hidden = t.id !== 'tab-' + activeTab; });
+    refreshActive();
+  };
+});
+
+function refreshActive() {
+  const work = activeTab === 'requests' ? refreshRequests() : activeTab === 'graph' ? refreshGraph() : refresh();
+  return work.catch(() => {});
+}
+
+function pretty(payload) {
+  if (!payload || !payload.body) return '(empty)';
+  const type = (payload.contentType || '').toLowerCase();
+  let text = payload.body;
+  if (type.includes('json') && !payload.truncated) {
+    try { text = JSON.stringify(JSON.parse(text), null, 2); } catch (e) { /* show as received */ }
+  }
+  return text + (payload.truncated ? '\n[cut: showing the first 10 KB of ' + payload.bytes + ' bytes]' : '');
+}
+
+function payloadBlock(title, payload) {
+  const meta = payload && payload.bytes ? ' (' + (payload.contentType || 'no content type') + ', ' + payload.bytes + ' bytes)' : '';
+  return el('div', {}, el('h3', { textContent: title + meta }), el('pre', { textContent: pretty(payload) }));
+}
+
+function detailRow(record) {
+  const td = el('td', { colSpan: 9 });
+  const query = record.query ? '?' + record.query : '';
+  const lines = [record.method + ' ' + record.path + query];
+  if (record.origin) lines.push('Origin: ' + record.origin);
+  lines.push('Client: ' + record.clientAddress);
+  if (record.ruleId) {
+    lines.push((record.mocked ? 'Mocked by rule ' : 'Matched rule ') + record.ruleId
+      + (record.mocked ? '' : ', which let it through') + (record.delayMs ? ', delayed ' + record.delayMs + ' ms' : ''));
+  }
+  td.append(el('div', { style: 'margin-bottom: 12px' }, el('h3', { textContent: 'Request' }), el('pre', { textContent: lines.join('\n') })),
+    el('div', { className: 'pair' }, payloadBlock('Request body', record.request),
+      payloadBlock(record.mocked ? 'Response (mocked)' : 'Response (from the backend)', record.response)));
+  return el('tr', { className: 'detail' }, td);
+}
+
+async function refreshRequests() {
+  const records = await call('GET', '/requests');
+  $('requests-note').textContent = records.length + ' shown';
+  const rows = [];
+  for (const r of records) {
+    const tr = el('tr', { className: 'row' + (expanded.has(r.id) ? ' open' : '') },
+      cell(r.id), cell(new Date(r.timeMs).toLocaleTimeString()), clipCell(r.origin || '-'), clipCell(r.clientAddress), cell(r.method),
+      clipCell(r.path + (r.query ? '?' + r.query : '')),
+      el('td', {}, el('span', { className: 'tag ' + (r.mocked ? 'mocked' : 'real'), textContent: r.mocked ? 'Mocked' : 'Backend' })),
+      cell(r.status, r.status >= 400 ? 'status-bad' : ''), cell(r.durationMs + ' ms'));
+    tr.onclick = () => { expanded.has(r.id) ? expanded.delete(r.id) : expanded.add(r.id); refreshRequests(); };
+    rows.push(tr);
+    if (expanded.has(r.id)) rows.push(detailRow(r));
+  }
+  const ids = new Set(records.map(r => r.id));
+  expanded.forEach(id => { if (!ids.has(id)) expanded.delete(id); });
+  $('requests').replaceChildren(...rows);
+}
+
+$('clear-requests').onclick = async () => {
+  try { await call('DELETE', '/requests'); expanded.clear(); await refreshRequests(); } catch (e) { showError(e); }
+};
+
+const SVG = 'http://www.w3.org/2000/svg';
+function svg(tag, attrs, text) {
+  const node = document.createElementNS(SVG, tag);
+  for (const [k, v] of Object.entries(attrs || {})) node.setAttribute(k, v);
+  if (text != null) node.textContent = text;
+  return node;
+}
+
+/** The smallest axis maximum that splits into four whole-number steps of 1, 2, 5, 10, 20, 50... */
+function niceMax(value) {
+  for (let magnitude = 1; ; magnitude *= 10) {
+    for (const step of [1, 2, 5]) {
+      if (step * magnitude * 4 >= value) return step * magnitude * 4;
+    }
+  }
+}
+
+async function refreshGraph() {
+  const [points, records] = await Promise.all([call('GET', '/statistics/timeline'), call('GET', '/requests')]);
+  const W = 1040, H = 280, left = 44, bottom = 28, top = 10, plotH = H - bottom - top, plotW = W - left - 8;
+  const max = niceMax(Math.max(0, ...points.map(p => p.forwarded + p.mocked)));
+  const chart = svg('svg', { viewBox: '0 0 ' + W + ' ' + H, width: '100%', role: 'img' });
+  for (let i = 0; i <= 4; i++) {
+    const y = top + plotH - (plotH * i) / 4;
+    chart.append(svg('line', { x1: left, x2: W - 8, y1: y, y2: y, stroke: '#e5e7eb' }), svg('text', { x: left - 6, y: y + 4, 'text-anchor': 'end' }, String(Math.round((max * i) / 4))));
+  }
+  const barW = plotW / points.length;
+  points.forEach((p, i) => {
+    const x = left + i * barW + 1;
+    const real = (p.forwarded / max) * plotH, mock = (p.mocked / max) * plotH;
+    const when = new Date(p.startMs).toLocaleTimeString();
+    const tip = svg('title', {}, when + ': ' + p.forwarded + ' forwarded, ' + p.mocked + ' mocked');
+    const group = svg('g');
+    group.append(tip, svg('rect', { x, y: top, width: barW - 2, height: plotH, fill: 'transparent' }));
+    if (p.forwarded) group.append(svg('rect', { x, y: top + plotH - real, width: barW - 2, height: real, fill: '#3b82d4' }));
+    if (p.mocked) group.append(svg('rect', { x, y: top + plotH - real - mock, width: barW - 2, height: mock, fill: '#7c5cd8' }));
+    chart.append(group);
+  });
+  chart.append(svg('text', { x: left, y: H - 8 }, '5 minutes ago'), svg('text', { x: W - 8, y: H - 8, 'text-anchor': 'end' }, 'now'),
+    svg('text', { x: W / 2, y: H - 8, 'text-anchor': 'middle' }, 'calls per 5 seconds'));
+  $('graph').replaceChildren(chart);
+
+  const classes = [['2xx', 200, 299, '#2da44e'], ['3xx', 300, 399, '#8c959f'], ['4xx', 400, 499, '#bf8700'], ['5xx', 500, 599, '#cf222e']];
+  const counts = classes.map(([, lo, hi]) => records.filter(r => r.status >= lo && r.status <= hi).length);
+  const peak = Math.max(1, ...counts);
+  const rows = classes.map(([label, , , color], i) => el('div', { style: 'display:flex;align-items:center;gap:8px;margin:4px 0' },
+    el('span', { textContent: label, style: 'width:32px;color:#57606a' }),
+    el('div', { style: 'height:16px;border-radius:3px;background:' + color + ';width:' + (counts[i] / peak) * 70 + '%;min-width:' + (counts[i] ? 2 : 0) + 'px' }),
+    el('span', { textContent: String(counts[i]) })));
+  $('status-graph').replaceChildren(records.length ? el('div', {}, ...rows) : el('p', { className: 'hint', textContent: 'No requests yet.' }));
+}
+
+const params = new URLSearchParams(location.search || location.hash.replace(/^#/, '?'));
+const initTab = params.get('tab');
+if (initTab && $('tab-' + initTab + '-btn')) {
+  $('tab-' + initTab + '-btn').click();
+} else {
+  refresh().catch(showError);
+}
+if (params.has('expand')) {
+  expanded.add(1);
+}
+setInterval(refreshActive, 3000);
+</script>
+</body>
+</html>

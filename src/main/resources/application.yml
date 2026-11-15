@@ -1,0 +1,20 @@
+server:
+  port: 8080
+  # A proxy has to relay whatever headers pass through it, in both directions. Tomcat's default of 8KB rejects large
+  # ones (long redirect URLs, many cookies) with an error page instead.
+  max-http-request-header-size: 1MB
+  tomcat:
+    max-http-response-header-size: 1MB
+
+spring:
+  mvc:
+    formcontent:
+      filter:
+        enabled: false # the proxy forwards request bodies untouched, including form posts
+
+wizoz:
+  proxy:
+    # The backend that unmatched, and "successful", requests are forwarded to. Override with WIZOZ_PROXY_TARGET_URL.
+    target-url: http://localhost:8888
+    request-timeout: 30s
+    database-path: rules.db
