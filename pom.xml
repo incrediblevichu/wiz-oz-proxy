@@ -9,11 +9,11 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.wizoz</groupId>
-	<artifactId>wizard-of-oz-proxy</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>wiz-oz-proxy</artifactId>
+	<version>v1.0.0-beta</version>
 	<name>wizard-of-oz-proxy</name>
 	<description>A fault-injecting HTTP proxy: delays, mocked errors and deterministic failure sequences in front of any backend.</description>
-	<url>https://gitlab.com/incrediblevichu/wizard-of-oz-proxy</url>
+	<url>https://github.com/incrediblevichu/wiz-oz-proxy</url>
 	<licenses>
 		<license>
 			<name>MIT License</name>
@@ -21,7 +21,7 @@
 		</license>
 	</licenses>
 	<scm>
-		<url>https://gitlab.com/incrediblevichu/wizard-of-oz-proxy</url>
+		<url>https://github.com/incrediblevichu/wiz-oz-proxy</url>
 	</scm>
 	<properties>
 		<java.version>17</java.version>

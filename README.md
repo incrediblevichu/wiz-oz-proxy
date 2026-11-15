@@ -1,8 +1,14 @@
 # Wizard of Oz proxy
 
-A high-performance, developer-friendly HTTP proxy that sits in front of any backend service and misbehaves on purpose. Point your application at the proxy instead of the real backend, then configure rules to simulate real-world failure scenarios: latency spikes, intermittent outages, deterministic retry sequences, custom error codes, and rate limits.
+**A lightweight HTTP fault-injection proxy for developers, testers and IT integration professionals.**
 
-Use it to validate how your client and instrumentation stacks handle upstream dependencies under adverse conditions: timeouts, retries, fallback logic, circuit breakers, and error alerting.
+Wiz-Oz Proxy helps development and testing teams simulate unreliable HTTP dependencies, introduce controlled failures, inject latency and inspect service interactions without modifying application code.
+
+Designed as a complementary utility for existing development, testing and integration workflows, Wiz-Oz makes it easier to validate application behaviour under real-world failure conditions.
+
+It is not intended to replace existing testing frameworks, API mocking solutions or network simulation tools. Instead, it provides a simple, accessible way to introduce controlled HTTP failures into everyday development, QA and integration testing activities.
+
+**Test failure. Validate recovery. Build resilient integrations.**
 
 ![The management page](docs/images/ui.png)
 
