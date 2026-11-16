@@ -224,7 +224,7 @@ curl -X POST http://localhost:8080/wizoz/rules \
 
 ### Run
 ```bash
-java -jar target/wizard-of-oz-proxy-0.0.1-SNAPSHOT.jar \
+java -jar target/wiz-oz-proxy-v1.0.0-beta.jar \
   --wizoz.proxy.target-url=https://api.example.com \
   --server.port=8080
 ```
